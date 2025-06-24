@@ -9,6 +9,7 @@ interface Project {
   description: string;
   tags: string;
   created_at: string;
+  vote_count: number;
 }
 
 export default function ExplorePage() {
@@ -65,6 +66,24 @@ export default function ExplorePage() {
 
   const clearFilters = () => setSelectedTags([]);
 
+  // Voting logic
+  const handleVote = async (projectId: string, delta: number) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === projectId ? { ...p, vote_count: (p.vote_count || 0) + delta } : p
+      )
+    );
+    await supabase
+      .from('projects')
+      .update({ vote_count: supabase.rpc('increment_vote_count', { project_id: projectId, delta }) })
+      .eq('id', projectId);
+    // fallback: if no RPC, just update directly
+    await supabase
+      .from('projects')
+      .update({ vote_count: (projects.find(p => p.id === projectId)?.vote_count || 0) + delta })
+      .eq('id', projectId);
+  };
+
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Explore Projects</h1>
@@ -101,12 +120,29 @@ export default function ExplorePage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
-            <Link
-              key={project.id}
-              href={`/project/${project.id}`}
-              className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow hover:ring-2 hover:ring-foreground/30 focus:outline-none"
-            >
-              <h2 className="text-xl font-semibold mb-2">{project.title}</h2>
+            <div key={project.id} className="bg-white rounded-lg shadow-md p-6 flex flex-col hover:shadow-lg transition-shadow hover:ring-2 hover:ring-foreground/30 focus:outline-none">
+              <div className="flex items-center justify-between mb-2">
+                <Link href={`/project/${project.id}`} className="text-xl font-semibold text-foreground hover:underline">
+                  {project.title}
+                </Link>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleVote(project.id, 1)}
+                    className="px-2 py-1 rounded-full bg-gray-100 hover:bg-green-100 text-green-700 border border-gray-300 hover:border-green-400 transition-colors"
+                    title="Upvote"
+                  >
+                    ▲
+                  </button>
+                  <span className="font-mono text-base w-8 text-center">{project.vote_count || 0}</span>
+                  <button
+                    onClick={() => handleVote(project.id, -1)}
+                    className="px-2 py-1 rounded-full bg-gray-100 hover:bg-red-100 text-red-700 border border-gray-300 hover:border-red-400 transition-colors"
+                    title="Downvote"
+                  >
+                    ▼
+                  </button>
+                </div>
+              </div>
               <p className="text-gray-600 mb-4">{project.description}</p>
               <div className="flex flex-wrap gap-2 mb-4">
                 {project.tags.split(',').map((tag, index) => (
@@ -121,7 +157,8 @@ export default function ExplorePage() {
               <p className="text-sm text-gray-500">
                 Created {new Date(project.created_at).toLocaleDateString()}
               </p>
-            </Link>
+              <Link href={`/project/${project.id}`} className="mt-4 inline-block text-blue-600 hover:underline font-medium text-sm">View Details</Link>
+            </div>
           ))}
           {filteredProjects.length === 0 && (
             <div className="col-span-full text-center text-gray-500">No projects found for selected tags.</div>
