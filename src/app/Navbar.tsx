@@ -2,11 +2,6 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-// Try to import react-avatar and framer-motion, fallback if not available
-let Avatar: any = undefined;
-try { Avatar = require('react-avatar').default; } catch {}
-let motion: any = undefined;
-try { motion = require('framer-motion'); } catch {}
 
 export default function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
@@ -50,11 +45,8 @@ export default function Navbar() {
     setEmail("");
   }
 
-  // Animation wrapper (framer-motion or fallback)
-  const Animate = motion?.motion?.div || (({ children, ...props }: any) => <div {...props}>{children}</div>);
-
   // Get display name or fallback
-  const displayName = user?.user_metadata?.name || user?.email?.split("@")[0] || null;
+  const displayName = user?.user_metadata?.full_name || user?.email?.split("@")[0] || null;
 
   return (
     <>
@@ -77,12 +69,8 @@ export default function Navbar() {
           {!loading && !user && (
             <>
               {showSignIn ? (
-                <Animate
-                  initial={motion ? { opacity: 0, scale: 0.95 } : undefined}
-                  animate={motion ? { opacity: 1, scale: 1 } : undefined}
-                  exit={motion ? { opacity: 0, scale: 0.95 } : undefined}
-                  transition={motion ? { duration: 0.18 } : undefined}
-                  className="absolute right-6 top-16 z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg p-4 min-w-[260px] flex flex-col gap-3 animate-fade-in"
+                <div
+                  className="absolute right-6 top-16 z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-lg p-4 min-w-[260px] flex flex-col gap-3 animate-fade-in transition-all duration-200"
                   style={{ boxShadow: '0 4px 24px 0 rgba(0,0,0,0.08)' }}
                 >
                   <form onSubmit={handleSignIn} className="flex flex-col gap-3">
@@ -111,7 +99,7 @@ export default function Navbar() {
                     </div>
                   </form>
                   {message && <div className="text-blue-700 text-xs text-center mt-1">{message}</div>}
-                </Animate>
+                </div>
               ) : (
                 <button
                   onClick={() => setShowSignIn(true)}
@@ -126,8 +114,6 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               {displayName ? (
                 <span className="text-sm text-foreground font-mono">Hi, {displayName}</span>
-              ) : Avatar ? (
-                <Avatar name={user.email} size="32" round={true} />
               ) : (
                 <span className="inline-block w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold text-lg">
                   {user.email?.[0]?.toUpperCase() || "U"}
