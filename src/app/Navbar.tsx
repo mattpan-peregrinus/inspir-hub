@@ -2,11 +2,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import type { User } from "@supabase/supabase-js";
 
 export default function Navbar() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [email, setEmail] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
 
