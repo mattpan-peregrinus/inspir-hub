@@ -51,9 +51,10 @@ export default async function HomePage() {
             <div className="col-span-full text-center text-gray-500">No projects found.</div>
           ) : (
             projects.map((project) => (
-              <div
+              <Link
                 key={project.id}
-                className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 flex flex-col hover:shadow-lg transition-shadow"
+                href={`/project/${project.id}`}
+                className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-6 flex flex-col hover:shadow-lg transition-shadow hover:ring-2 hover:ring-foreground/30 focus:outline-none"
               >
                 <h3 className="text-xl font-semibold mb-2 text-foreground">{project.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">{project.description}</p>
@@ -67,7 +68,7 @@ export default async function HomePage() {
                     </span>
                   ))}
                 </div>
-              </div>
+              </Link>
             ))
           )}
         </div>
