@@ -12,11 +12,22 @@ interface Project {
   vote_count: number;
 }
 
+function useDebouncedValue<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debounced;
+}
+
 export default function ExplorePage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebouncedValue(search, 300);
 
   useEffect(() => {
     async function fetchProjects() {
@@ -47,7 +58,7 @@ export default function ExplorePage() {
   }, []);
 
   // Filter projects by selected tags (OR logic)
-  const filteredProjects = selectedTags.length === 0
+  let filteredProjects = selectedTags.length === 0
     ? projects
     : projects.filter((project) =>
         project.tags
@@ -55,6 +66,16 @@ export default function ExplorePage() {
           .map((t) => t.trim().toLowerCase())
           .some((tag) => selectedTags.map((t) => t.toLowerCase()).includes(tag))
       );
+
+  // Further filter by search query (title or description, case-insensitive)
+  if (debouncedSearch.trim() !== "") {
+    const q = debouncedSearch.trim().toLowerCase();
+    filteredProjects = filteredProjects.filter(
+      (p) =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q)
+    );
+  }
 
   const toggleTag = (tag: string) => {
     setSelectedTags((prev) =>
@@ -75,11 +96,6 @@ export default function ExplorePage() {
     );
     await supabase
       .from('projects')
-      .update({ vote_count: supabase.rpc('increment_vote_count', { project_id: projectId, delta }) })
-      .eq('id', projectId);
-    // fallback: if no RPC, just update directly
-    await supabase
-      .from('projects')
       .update({ vote_count: (projects.find(p => p.id === projectId)?.vote_count || 0) + delta })
       .eq('id', projectId);
   };
@@ -87,6 +103,17 @@ export default function ExplorePage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Explore Projects</h1>
+
+      {/* Search Bar */}
+      <div className="mb-6 flex justify-center">
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Search projects by title or description..."
+          className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-full focus:outline-none focus:ring-2 focus:ring-foreground bg-gray-50 dark:bg-gray-800 text-foreground text-base shadow-sm"
+        />
+      </div>
 
       {/* Tag Filter UI */}
       <div className="mb-8 flex flex-wrap gap-3 items-center">
@@ -161,7 +188,7 @@ export default function ExplorePage() {
             </div>
           ))}
           {filteredProjects.length === 0 && (
-            <div className="col-span-full text-center text-gray-500">No projects found for selected tags.</div>
+            <div className="col-span-full text-center text-gray-500">No projects found for selected tags or search.</div>
           )}
         </div>
       )}
