@@ -7,4 +7,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey) 
+export function createSupabaseClient() {
+  return createClient(supabaseUrl as string, supabaseAnonKey as string)
+}
+
+// Singleton for client-side use
+export const supabase = createClient(supabaseUrl as string, supabaseAnonKey as string) 

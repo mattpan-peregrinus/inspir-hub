@@ -17,6 +17,7 @@ interface Comment {
   id: string;
   project_id: string;
   user_id: string | null;
+  username?: string | null;
   content: string;
   created_at: string;
 }
@@ -37,6 +38,7 @@ export default function ProjectDetailPage() {
   const [votes, setVotes] = useState<CommentVote[]>([]);
   const [commentText, setCommentText] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +50,7 @@ export default function ProjectDetailPage() {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       setUserId(user?.id || null);
+      setUserName(user?.user_metadata?.full_name || user?.email || null);
       const { data: projectData } = await supabase
         .from('projects')
         .select('*')
@@ -96,7 +99,12 @@ export default function ProjectDetailPage() {
     }
     setSubmitting(true);
     const { error: insertError } = await supabase.from('comments').insert([
-      { project_id: id, user_id: userId, content: commentText.trim() }
+      {
+        project_id: id,
+        user_id: userId,
+        username: userName,
+        content: commentText.trim()
+      }
     ]);
     setSubmitting(false);
     if (insertError) {
@@ -220,7 +228,7 @@ export default function ProjectDetailPage() {
           {comments.map(comment => (
             <div key={comment.id} className="bg-gray-50 dark:bg-gray-800 rounded p-4 shadow flex flex-col gap-2">
               <div className="flex items-center gap-2 justify-between">
-                <span className="text-sm text-gray-700 dark:text-gray-200 font-mono">{comment.user_id ?? 'Anonymous'}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-200 font-mono">{comment.username || 'Anonymous'}</span>
                 <span className="text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</span>
               </div>
               <div className="text-foreground text-base mb-2">{comment.content}</div>
