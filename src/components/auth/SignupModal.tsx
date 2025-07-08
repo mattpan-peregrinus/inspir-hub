@@ -56,28 +56,6 @@ export default function SignupModal({ open, onClose, onSwitchToLogin }: SignupMo
       setError(error.message);
       return;
     }
-    // Insert into profiles table if signup succeeded
-    const user = data?.user;
-    if (user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          {
-            id: user.id,
-            full_name: name,
-            // avatar_url: '', // leave blank for now
-            // bio: '',
-            // website: '',
-            // github: '',
-            // twitter: '',
-          },
-        ]);
-      if (profileError) {
-        setLoading(false);
-        setError("Signup succeeded, but failed to create profile: " + profileError.message);
-        return;
-      }
-    }
     setLoading(false);
     setSuccess("Account created! Check your email to confirm.");
     setTimeout(onClose, 1500);

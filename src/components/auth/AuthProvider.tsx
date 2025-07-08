@@ -37,6 +37,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Ensure profile exists for logged-in user
+  useEffect(() => {
+    if (!user) return;
+    async function ensureProfile() {
+      if (!user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+      if (!profile) {
+        await supabase.from("profiles").insert([
+          {
+            id: user.id,
+            full_name: user.user_metadata?.full_name || "",
+            // Add other fields as needed
+          },
+        ]);
+      }
+    }
+    ensureProfile();
+  }, [user]);
+
   async function login(email: string, password: string) {
     setError(null);
     setLoading(true);
