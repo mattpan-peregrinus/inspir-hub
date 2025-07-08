@@ -73,6 +73,13 @@ export default function Navbar() {
                   {user.email?.[0]?.toUpperCase() || "U"}
                 </span>
               )}
+              {/* My Profile link */}
+              <Link
+                href={`/profile/${user.id}`}
+                className="text-foreground hover:text-blue-600 hover:underline font-medium transition-colors px-2 py-1 rounded"
+              >
+                My Profile
+              </Link>
               <button
                 onClick={handleSignOut}
                 className="rounded-full border border-gray-300 text-gray-500 bg-transparent px-4 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
